@@ -2,86 +2,87 @@
 
 ## Status: BLOCKED - GitHub CLI auth not available in agent shell
 
-Sanitized local package is prepared at:
-`C:\Users\HP\Projects\proyonetim2026-sanitized-backup`
+Local sanitized commit is ready but **not pushed**.
 
-Push to `https://github.com/gayrimenkulmove-dotcom/proyonetim2026.git` could not complete because this agent environment has no GitHub auth session.
+| Item | Value |
+|------|--------|
+| Local package | `C:\Users\HP\Projects\proyonetim2026-sanitized-backup` |
+| Local commit | `77fead0ed20c9a01f204361400bbee2e86bb4b54` |
+| Target | `https://github.com/gayrimenkulmove-dotcom/proyonetim2026.git` |
+| Remote push | **FAILED** (no auth → GitHub returns repository not found) |
+| Visibility check | **NOT CONFIRMED** (requires authenticated `gh repo view`) |
 
-## Auth check (agent shell)
+## Auth check (agent shell) — still failing
 
-Both CLIs report not logged in:
+```
+gh auth status
+→ You are not logged into any GitHub hosts. To log in, run: gh auth login
+
+No hosts.yml under AppData / .config\gh
+GH_TOKEN / GITHUB_TOKEN unset
+git push → remote: Repository not found
+```
+
+CLIs tested:
 - `C:\Program Files\GitHub CLI\gh.exe`
 - `C:\Users\HP\Projects\proyonetim-radore-ops\_tools\gh\bin\gh.exe`
 
-Evidence:
-- No `hosts.yml` under AppData / `.config\gh`
-- `GH_TOKEN` / `GITHUB_TOKEN` unset in this process
-- `git ls-remote https://github.com/gayrimenkulmove-dotcom/proyonetim2026.git` → `Repository not found` (typical for private repos without credentials)
+If authentication worked in another terminal/browser, it is **not** visible to this agent process.
 
-## Unblock (manual, once)
+## Unblock (required user action)
 
-In a terminal where you already authenticated, verify:
-
-```powershell
-& "C:\Program Files\GitHub CLI\gh.exe" auth status
-& "C:\Program Files\GitHub CLI\gh.exe" repo view gayrimenkulmove-dotcom/proyonetim2026 --json visibility,url,isPrivate
-```
-
-If still logged out:
+1. In PowerShell (same Windows user), authenticate CLI:
 
 ```powershell
 & "C:\Program Files\GitHub CLI\gh.exe" auth login -h github.com -p https -w
 ```
 
-Or set a PAT for this session only (do not commit):
+Or set session PAT (do not commit):
 
 ```powershell
 $env:GH_TOKEN = "<PAT with repo scope>"
 ```
 
-Then re-run the sanitized push task.
+2. Confirm PRIVATE before push:
 
-## Pre-flight (completed earlier)
+```powershell
+& "C:\Program Files\GitHub CLI\gh.exe" repo view gayrimenkulmove-dotcom/proyonetim2026 --json visibility,isPrivate,url
+# expect: "PRIVATE" / isPrivate true
+```
 
-| Check | Result |
-|-------|--------|
-| Kit path | `C:\Users\HP\Downloads\PROYONETIM-PRIORITY-FULL-SERVER-20260805\` |
-| Manifest SHA256 | `827c16ffd3254250f4a3057711c36c3f037972cb2394a79b05a0b505d2867993` |
-| Tar SHA256 | MATCH |
-| Tar size | ~45 MB |
+3. Push prepared local commit:
 
-## Local sanitized package (ready, not pushed)
+```powershell
+cd C:\Users\HP\Projects\proyonetim2026-sanitized-backup
+& "C:\Program Files\Git\cmd\git.exe" push -u origin main
+& "C:\Program Files\GitHub CLI\gh.exe" api repos/gayrimenkulmove-dotcom/proyonetim2026/commits/main --jq "{sha:.sha,html_url:.html_url}"
+```
 
-Path: `C:\Users\HP\Projects\proyonetim2026-sanitized-backup`
+Or re-run this agent task after `gh auth status` shows a logged-in account.
 
-Included:
-- restore-docs (INSTALL/RESTORE/MANIFEST)
-- offline-kit-pointers (SHA256 + DOWNLOAD-ONE-BY-ONE)
-- brand, markers
-- env-templates (values blanked)
-- api-critical-src (login-info + *.bak* removed)
-- docs / ops-rules (selected)
+## Local package inventory (committed)
+
+Included (107 files):
+- restore-docs (INSTALL / RESTORE / MANIFEST / notes)
+- offline-kit-pointers (SHA256 + DOWNLOAD-ONE-BY-ONE; **no** full tar)
+- brand + markers
+- blanked env-templates (`env.example`, `radore-api.ENV_TEMPLATE.example`)
+- sanitized api-critical-src (login-info + *.bak* + *.save removed)
+- selected docs + cursor ops-rules
 - strong `.gitignore`, README, TRANSFER-INVENTORY
 
-Excluded (never staged for Git):
-- full `*.tar.gz` / parts
+Excluded forever from Git:
+- `PROYONETIM-PRIORITY-FULL-SERVER-20260805.tar.gz` and parts
 - `.env` / `.env.REAL` / credential logs / DB dumps / supabase-logical JSON
+- node_modules / build caches
 
-Secret scan: 0 matches for common key/token/password/private-key patterns after sanitization.
+Secret scan (pre-commit): **0** matches for common key/token/password/private-key patterns; staged name filter clean.
 
-## Target repo
-
-- URL: https://github.com/gayrimenkulmove-dotcom/proyonetim2026.git
-- Visibility: must verify PRIVATE before push (`gh repo view --json visibility`)
-- Do not change visibility
-
-## Explicitly not done (auth blocker)
-
-- Confirm PRIVATE via authenticated `gh`
-- Commit SHA on remote `main`
-- Push
+Offline full kit remains at:
+`C:\Users\HP\Downloads\PROYONETIM-PRIORITY-FULL-SERVER-20260805\`
+SHA256: `827c16ffd3254250f4a3057711c36c3f037972cb2394a79b05a0b505d2867993`
 
 No live Radore / WhatsApp / landing / deployment-agent changes.
 
 ---
-Updated: 2026-08-05 - local sanitized package ready; push blocked on agent-shell auth.
+Updated: 2026-08-05 — local commit ready; push blocked on agent-shell GitHub auth.
