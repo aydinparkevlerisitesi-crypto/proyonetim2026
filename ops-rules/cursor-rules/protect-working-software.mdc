@@ -1,0 +1,30 @@
+---
+description: Ana kural — çalışan yapı korunur, bozulmaz
+alwaysApply: true
+---
+
+# Ana kural: Çalışan yapı her zaman korunur
+
+Pro Yönetim’de **çalışan parçalar ana odaktır**. Yeni iş, test veya yama hiçbir çalışan özelliği bozamaz.
+
+## Zorunlu
+
+- Çalışan özellikler (WhatsApp Merkezi, overview KpiGrid ana sayfa, şehir hero, site seçici, SMS, personel takip, banka/TEB hazırlığı, SSOT gerçek veri vb.) **her zaman yüklü ve çalışır** kalır
+- Bitmiş yapı (overview kart düzeni, SSOT, kompakt layout) **koruma altındadır**; yeni iş staging’de, canlıya yalnızca açık publish ile
+- Yeni geliştirme **üstüne** eklenir; çalışan kodu ezmez, router’ı silmez, symlink’i rastgele çevirmez
+- Canlı `landing` / korunan release’ler açık onay (“publish”) olmadan değiştirilmez
+- Yamalar **cerrahi** olur: yalnızca ilgili dosya; “tüm release’i rsync ile eski kopyaya çek” yasaktır eğer bu onaylı işi geri alırsa
+- Bozulursa **hemen** bilinen iyi / PROTECTED yedeğe dön
+
+## Yasak
+
+- “Geçici” diye çalışan ekranı/API’yi kırmak
+- Bir özellik eklerken başka çalışan özelliğin UI/API/env’ini yan etkiyle bozmak
+- Debug marker / sahte metin / yanlış hero bırakmak
+- Korunan overview hero, WhatsApp, site seçici gibi onaylı parçaları “yeniden tasarım” adı altında silmek
+
+## Uygulama sırası
+
+1. Önce çalışanı koru / smoke doğrula  
+2. Sonra yeni işi staging’de yap  
+3. Kullanıcı publish deyince cerrahi yayınla

@@ -1,0 +1,5 @@
+Logical live export attempted to db/supabase-logical-live/.
+Binary app_supabase.dump often unavailable (HTTPS project URL).
+Prefer same Supabase project via env.REAL on new server.
+evolution_db.dump is local Postgres for Evolution.
+chmod 600 on dumps/JSON with production data.

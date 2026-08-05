@@ -1,0 +1,46 @@
+---
+description: HARD LOCK — WhatsApp Merkezi + business messaging send paths; no further changes without explicit user command
+alwaysApply: true
+---
+
+# HARD LOCK: WhatsApp messaging (2026-08-04)
+
+Supersedes drive-by “fix messaging” work. Aligns with `protect-whatsapp-communication-hard-lock`.
+
+The user ordered: **messaging section under protection so it does not deteriorate.**  
+**WhatsApp Merkezi / business messaging is frozen.** Do **not** modify WhatsApp feature code, send paths, or live chunks unless the user **explicitly names WhatsApp / İletişim / messaging** in the command.
+
+## Locked surface
+
+| Area | Examples |
+|------|----------|
+| UI routes | `/dashboard/whatsapp-center`, `/dashboard/whatsapp`, `/dashboard/communication-center`, İletişim Merkezi / WhatsApp Merkezi menu |
+| Send API | `/api/whatsapp/*`, especially `/api/whatsapp/site/send` |
+| Relays (PM2) | `whatsapp-send-relay` `:3016`, `whatsapp-credentials-relay` `:3017`, related Evolution / Soft Evolution hooks |
+| Live chunks | Active family: `page-CKFOdH2C2*.js` (lazy import from `index-Baa-Fpzt.js`); legacy `page-C37hUW5w2.js` / `Uh` where still referenced |
+| Send-login / bulk | `send-login-info`, `bulk-send-login-info` and related WA client modules |
+
+## Absolute ban (no explicit WhatsApp command)
+
+- Do **not** edit, overwrite, retarget, scrub, experiment on, or “improve” WhatsApp Merkezi / messaging UI or API
+- Do **not** start further WhatsApp QR / pair / send / Evolution experiments
+- Do **not** copy foreign staging `page-*.js` into live for WA
+- Do **not** change `landing` / `mapDeps` / index imports that retarget the WhatsApp lazy chunk while doing other work
+- Do **not** send WhatsApp/SMS under test or “protection” pretenses
+- Do **not** start `radore-deployment-agent`
+
+## Allowed only when user clearly commands WhatsApp
+
+Examples: “WhatsApp Merkezi’ni düzelt”, “iletişim merkezini publish et”, “WhatsApp gönderimi”, “messaging’e dokun”.  
+Vague tasks (“fix the site”, “ProY”, “otonom”, “portal”) are **not** permission.
+
+## Freeze pointers
+
+- Doc: `docs/WHATSAPP-MESSAGING-HARD-LOCK-2026-08-04.md`
+- Marker: live `WHATSAPP_PROTECTED.txt` (freeze note only — not a code rewrite)
+- Backups: `/var/backups/proyonetim/feature-protection/PROTECTED-whatsapp-working-*` and `PROTECTED-whatsapp-comm-HARDLOCK-LATEST`
+- Proven send path (2026-08-04): `whatsapp-send-relay` online after SEND-502 fix; Evolution session connected — **leave it**
+
+## One-line rule
+
+**No user command naming WhatsApp / İletişim / messaging → no WhatsApp or send-path intervention.**

@@ -1,0 +1,35 @@
+---
+description: Bitmiş yapı korunur — staging seviyesinde geliştir, canlıyı ezme
+alwaysApply: true
+---
+
+# Bitmiş yapıyı koru; değişiklik farklı seviyede
+
+Onaylanmış ekran/API/router **üretim omurgasıdır**. Sonradan gelen iş bunu **bozmaz, üstüne yazmaz, geri almaz**.
+
+## İki seviye
+
+| Seviye | Nerede | Ne zaman canlıya |
+|--------|--------|------------------|
+| **Korunan (bitmiş)** | Canlı `landing`, `PROTECTED-*` yedekler | Zaten yayında — dokunma |
+| **Geliştirme** | `proyonetim-staging/work/<özellik>-*` | Kullanıcı “publish” / “canlıya al” deyince cerrahi |
+
+## Zorunlu
+
+- Başka özellik (banka, TEB, paket, panel…) yapılırken overview, WhatsApp, site seçici, SSOT **yan etkiyle değişmez**
+- Tam dosya/router/release swap yerine **hedef dosyada cerrahi diff**
+- Mock/sahte finans, demo panel, debug marker canlıya **girmez**
+- Korunan dosyalara dokunmadan önce staging’de build + smoke
+
+## Korunan overview özeti (detay: `protect-main-overview`)
+
+- `page.tsx` → `KpiGrid` (ReaddyMainOverview router’ı geri getirme)
+- 4 büyük FinCard + Detaylı Hareket kartları + kompakt şehir hero
+- `useFinancialSnapshot` — veri yoksa 0
+
+## Yayın öncesi kontrol
+
+- `dashboard-city-hero-v1` var, `site-mgmt-hero` yok
+- `Bankalar Toplamı` + SSOT; `Garanti BBVA` / `1350821` gibi mock yok
+- Tek `SiteSwitcher` (layout şeridi)
+- `LiveOperationsCenter` overview’da yok

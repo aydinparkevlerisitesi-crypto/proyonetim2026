@@ -1,0 +1,21 @@
+---
+description: Aidat eşit dağıtım — tutar birimlere bölünmez
+alwaysApply: true
+---
+
+# Aidat / borçlandırma eşit dağıtım (tüm yazılım)
+
+Girilen tutar **birim sayısına bölünmez**.
+
+- **Eşit dağıtım:** Her birim aynı tutarı alır (oran %50 ise yarısı)
+- **Site toplamı:** `birim başı tutar × birim sayısı`
+- Örnek: 1.200 ₺ aidat, 29 daire → her daire **1.200 ₺**, toplam **34.800 ₺**
+- `m²` dağıtımında havuz = birim başı × adet, sonra m² ağırlığıyla paylaştırılır
+
+Bu kural site-özel değil; **tüm yazılımda** geçerlidir (`dues-management`, bütçe dağıtım, ilgili hesaplayıcılar).
+
+## Değişiklik disiplini
+
+- Her yama **ürün geneli** için yapılır; tek site (ör. AK-RE) için fork / hard-code yok
+- Site yalnızca `siteId` / `currentSite` ile **veri bağlamıdır**
+- Gecikme (Robosay %5), eşit aidat, vade — tüm sitelerde aynı motor

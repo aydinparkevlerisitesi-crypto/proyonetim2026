@@ -1,0 +1,30 @@
+---
+description: Yazılım temelli paylaşım — site özel/kapalı değil
+alwaysApply: true
+---
+
+# İkinci ana kural: Yazılım paylaşılır, site özel değildir
+
+Pro Yönetim **site yönetim paneli değil; yazılım ürünüdür**. Site seçimi bağlamdır; özellikleri kilitleyen özel duvar değildir.
+
+## Anlam
+
+- Yapılan her iş **yazılımın tamamına** aittir — tek siteye “özel / private” özellik olarak gömülmez
+- Aktif site yalnızca **hangi verinin** gösterileceğini seçer; modüller, entegrasyonlar, ekranlar ve API’ler tüm sitelerde **eşit paylaşılır**
+- Yeni özellik (banka, WhatsApp, finans, personel, demo, rapor…) site-bağımsız ürün yeteneği olarak gelir; veri site’ye göre filtrelenir, kod site’ye özel fork edilmez
+
+## Zorunlu
+
+- Site değiştirince tüm yazılım aynı yeteneklerle çalışır (bağlam = `SiteContext` / `currentSite`)
+- Entegrasyon ve ayarlar yazılım seviyesinde kurulur; “sadece X sitesinde var” diye kod yolu açılmaz (tenant/rol yetkisi hariç)
+- Overview, banka merkezi, WhatsApp, raporlar vb. **paylaşılan** yüzeylerdir — site adı değişir, yazılım aynı kalır
+
+## Yasak
+
+- Özelliği tek siteye hard-code etmek (site id / site adına gömülü özel UI veya API)
+- “Bu site private olsun, diğer siteler görmesin” diye ürün özelliğini gizlemek (yetki/rol ayrı; ürün parçalaması değil)
+- Site yönetimi bahanesiyle yazılımı parçalayıp site-özel kopyalar üretmek
+
+## Özet
+
+**Site = veri bağlamı. Yazılım = ortak ürün.** Her çalışan parça tüm yazılımda eşit paylaşılır.

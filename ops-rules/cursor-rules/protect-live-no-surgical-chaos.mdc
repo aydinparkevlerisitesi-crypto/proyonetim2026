@@ -1,0 +1,45 @@
+---
+description: Canlıya minified yama ve önbellek oyunu yasak; smoke zorunlu
+alwaysApply: true
+---
+
+# Canlı koruma disiplini (2026-07-30 dersi)
+
+Çalışan Pro Yönetim **canlıda deneme tahtası değildir**. Bugünkü beyaz sayfa / WhatsApp çökmesi zinciri, canlı minified yama + Service Worker önbelleğinden geldi.
+
+## Mutlak yasak (açık “publish” olmadan)
+
+- Canlı `landing/assets/*.js` minified dosyaya peş peşe cerrahi yama
+- Aynı hash’li dosyayı yerinde değiştirip tarayıcı önbelleğine güvenmek
+- `index.html` / `sw.js` ile cache-bust deneyi zinciri (eski+yeni JS karışır → `removeChild` / beyaz sayfa)
+- WhatsApp / overview / site seçici / SMS / personel / banka API’ye “yan iş” olarak dokunmak
+- `radore-deployment-agent` başlatmak
+- `landing` symlink’ini korunan release’ten başka yere çevirmek
+
+## Zorunlu sıra (her iş)
+
+1. **Smoke (önce):** ana sayfa + firma giriş HTTP 200; `index.html` → `assets/index-*.js` (asla `/src/main`); `LiveEntryMonitorPage` bare ref yok; PM2 `proyonetim-api` online, `radore-deployment-agent` stopped
+2. **Staging:** `/var/www/proyonetim-staging/work/<özellik>-YYYYMMDD-...` — kaynak kod + build
+3. **Kullanıcı “publish” / “canlıya al”** deyince: tek seferde, bilinen iyi release clone + cerrahi diff
+4. **Smoke (sonra):** aynı kontroller + dokunulan özellik (WhatsApp gönderim, overview kartlar)
+
+## WhatsApp özel
+
+- Kullanıcı WhatsApp / İletişim Merkezi demeden canlıya dokunma (`protect-whatsapp-communication-hard-lock`)
+- Gönderim hatası UI’da `error.substring` / React #31 → kök neden çoğu zaman **nesne `error`** (send-relay `available_open_instances`); önce API/relay string + instance eşlemesi, sonra UI
+- Cihaz “bağlı” görünürken gönderim fail → `whatsapp-send-relay` site_id ↔ Evolution instance eşlemesini kontrol et
+
+## Bozulursa
+
+1. Dur — yeni yama ekleme
+2. Bilinen iyi: `overview-compact-20260722-092420` veya `PROTECTED-*` yedek
+3. Kullanıcıya net söyle: ne bozuldu, hangi yedekten dönüldü
+
+## Denetim
+
+```bash
+python3 /tmp/audit_live_stability_full.py
+# veya repo: _patch/audit_live_stability_full.py
+```
+
+Rapor: `/var/backups/proyonetim/feature-protection/LIVE-STABILITY-AUDIT-*.json`

@@ -1,0 +1,50 @@
+---
+description: HARD LOCK — WhatsApp İletişim Merkezi; no agent intervention without explicit user command
+alwaysApply: true
+---
+
+# HARD LOCK: WhatsApp / İletişim Merkezi
+
+The user ordered: **WhatsApp Communication Center is completely protected.**  
+If the user did **not** explicitly command a change to WhatsApp / İletişim Merkezi / publish of that area, **do not intervene** in the live system for it.
+
+## Locked product surface
+
+- Routes: `/dashboard/whatsapp-center`, `/dashboard/whatsapp`, `/dashboard/communication-center`, related “İletişim Merkezi” / “WhatsApp Merkezi” menu entries
+- API: `/api/whatsapp/*` (including site send, Soft Evolution hooks) — no drive-by edits
+- Live chunk (index-Dndo7UYO family): `page-C37hUW5w2.js` (lazy `Uh`)
+- Related protected modules: WhatsApp API client chunks, send-login-info / bulk-send flows already covered by existing WhatsApp rules
+
+## Absolute ban (without explicit user command)
+
+- Do **not** edit, overwrite, retarget, scrub, or “fix” WhatsApp / İletişim Merkezi files on live or staging-for-live
+- Do **not** change `landing` symlink, `mapDeps`, or `index-*.js` imports that affect `Uh` / WhatsApp routes while doing ProY, voice, bank, overview, or other work
+- Do **not** copy foreign staging `page-*.js` into live (missing imports → shell crash → WhatsApp looks “broken”)
+- Do **not** neutralize or replace `page-C37hUW5w2.js` with voice/other aliases
+- Do **not** start `radore-deployment-agent`
+- Do **not** send WhatsApp/SMS under “test” or “protection” pretenses
+
+## Allowed only when user clearly commands it
+
+Examples of explicit command: “WhatsApp Merkezi’ni düzelt”, “iletişim merkezini publish et”, “WhatsApp’a dokun”.  
+Vague tasks (“fix the site”, “ProY”, “otonom”) are **not** permission to touch WhatsApp.
+
+## If something else breaks nearby
+
+1. Fix **only** the named non-WhatsApp target (e.g. ProY `page-DPutH6LT2.js` with same-hash deps)
+2. Verify WhatsApp chunk hash/size unchanged
+3. If WhatsApp is already broken and user did **not** ask to repair it: **stop and ask** — do not “helpfully” rewrite live
+
+## Freeze / restore pointers
+
+- Release marker: live `WHATSAPP_PROTECTED.txt`
+- Backups: `/var/backups/proyonetim/feature-protection/PROTECTED-whatsapp-working-*`
+- Known release: `/var/www/proyonetim/releases/whatsapp-baglanti-final-11988748-restored` (full switch only on explicit publish; prefer surgical restore of `page-C37hUW5w2.js` + deps)
+
+## Related (2026-08-04 messaging freeze)
+
+See also `protect-whatsapp-messaging-hard-lock` and `docs/WHATSAPP-MESSAGING-HARD-LOCK-2026-08-04.md` — same ban for send-relay / Evolution / further messaging experiments. Freeze marker only; do not rewrite WA feature code.
+
+## One-line rule
+
+**No user command naming WhatsApp/İletişim → no WhatsApp/live communication-center intervention.**

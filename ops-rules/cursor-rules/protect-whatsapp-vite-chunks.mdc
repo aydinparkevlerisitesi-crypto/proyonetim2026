@@ -1,0 +1,36 @@
+---
+description: Never overwrite WhatsApp chunks or inject foreign Vite page bundles
+alwaysApply: true
+---
+
+# WhatsApp + Vite chunk protection
+
+**Superseded in authority by `protect-whatsapp-communication-hard-lock`.**  
+WhatsApp Merkezi / İletişim Merkezi: **no intervention** unless the user explicitly commands it.
+
+WhatsApp Merkezi (`/dashboard/whatsapp-center`) is a **protected working feature**. ProY / voice / bank / other work must not break it and must not “fix” it unprompted.
+
+## Locked live facts (index-Dndo7UYO family)
+
+- Route `whatsapp-center` → lazy var `Uh` → `page-C37hUW5w2.js`
+- Route `voice-assistant` → lazy var `Km` → `page-DPutH6LT2.js` (label in bundle may say `PttKepPage` — trust the route binding)
+- `mapDeps[116]` = `page-DPutH6LT2.js`, `mapDeps[118]` = `page-C7XAUQvy.js`
+
+## Forbidden
+
+- Any WhatsApp/İletişim change without an explicit user command naming that area
+- Copying staging-built `page-*.js` into live unless **every** `from"./…"` import exists in that release’s `assets/`
+- Chunks that import missing files such as `index-BlTxRe5r.js` or `invokeEngine-CKnV7jPv.js`
+- Global `index` string replace of `page-DPutH6LT2.js` / voice aliases onto unrelated routes
+- Overwriting `page-C37hUW5w2.js` or WhatsApp API modules for ProY experiments
+- Switching live `landing` for WhatsApp experiments without explicit publish approval
+
+## Required when patching ProY Sesli (only if user asked for ProY)
+
+1. Only patch `page-DPutH6LT2.js` with same-hash deps — never touch `page-C37hUW5w2.js`
+2. After publish: verify WhatsApp chunk sha/size unchanged vs `PROTECTED-whatsapp-comm-HARDLOCK-LATEST`
+3. Freeze under `/var/backups/proyonetim/feature-protection/PROTECTED-whatsapp-working-*`
+
+## If WhatsApp breaks and user did not ask
+
+**Stop and ask.** Do not rewrite live “to help.”

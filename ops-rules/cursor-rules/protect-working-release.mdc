@@ -1,0 +1,33 @@
+---
+description: Never break Pro Yönetim live WhatsApp / working release while developing new features
+alwaysApply: true
+---
+
+# Protect working Pro Yönetim release
+
+## Locked (do not modify without explicit user approval)
+
+- Live symlink: `/var/www/proyonetim/landing`
+- Protected WhatsApp release: `/var/www/proyonetim/releases/whatsapp-baglanti-final-11988748-restored`
+- Protected overview (KpiGrid + kompakt hero + SSOT): `/var/www/proyonetim/releases/overview-compact-20260722-092420`
+- Feature freeze copies:
+  - `/var/backups/proyonetim/feature-protection/PROTECTED-whatsapp-working-*`
+  - `/var/backups/proyonetim/feature-protection/PROTECTED-overview-compact-*`
+  - `/var/backups/proyonetim/feature-protection/PROTECTED-kpigrid-ssot-real-*`
+- Do **not** start `radore-deployment-agent`
+
+## Development only
+
+- New work (billing, control panel, packages, etc.) only under:
+  - `/var/www/proyonetim-staging/work/<feature>-YYYYMMDD-...`
+  - or `/var/www/proyonetim/releases/<feature>-dev-*` / `*-staging-*`
+- Never overwrite the protected WhatsApp router/src by copying an unrelated `config.tsx` onto it
+- Do not switch live `landing` until the user explicitly says to publish/go live
+
+## If live was changed by mistake
+
+Restore immediately:
+
+```bash
+ln -sfn /var/www/proyonetim/releases/whatsapp-baglanti-final-11988748-restored /var/www/proyonetim/landing
+```

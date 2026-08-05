@@ -1,0 +1,29 @@
+---
+description: Cerrahi yamada çalışan route chunk’larını kırma
+alwaysApply: true
+---
+
+# Çalışan panelleri koru (Sakinler vb.)
+
+Tahakkuk / banka / SSOT yamalarında:
+
+## Zorunlu
+
+- `index-*.js` içinde string replace sonrası **tüm** `import("./page-…")` dosyalarının `assets/` altında var olduğunu doğrula
+- Eksik rename (`page-X-banklist-….js` vb.) varsa **hemen** mevcut chunk’tan kopyala; eksik bırakma
+- Sakinler (`page-x8LpDIyr` / `page-BKWBAMar`) ve WhatsApp chunk’larına dokunma (açık komut yoksa)
+- `index.html` cache-bust sonrası smoke: `/dashboard/residents` açılmalı
+
+## Yasak
+
+- mapDeps’te ölü dosya adı bırakmak
+- `index-*.js` dosya adını değiştirmek (page chunk’lar `from"./index-Baa-Fpzt.js"` import eder; rename = çift React / Daireler-Bloklar kırılır). Cache-bust yalnızca `?v=` veya page chunk rename
+- `roleMapping-*.js` silmek veya Firma/Site Yöneticisi eşlemesini bozmak (sol menü boşalır)
+- “Geçici” index swap ile çalışan sakin/kişi kartını kırmak
+- Hata sonrası başka korunan özelliği “düzeltme” bahanesiyle ezmek
+
+## Menü (sol / alt)
+
+- `Site Yönetimi` → `sakin_yonet`; `Finansal Yönetim` → `finans_goruntule`
+- DB’de `company_admin` + `site_admin` + `super_admin` bu bayraklara sahip olmalı
+- roleMapping: `firma yöneticisi` / `site yöneticisi` (Türkçe karakter) → doğru rol anahtarı

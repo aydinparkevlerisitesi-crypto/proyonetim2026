@@ -1,0 +1,35 @@
+---
+description: Canonical Pro Yönetim logo — metallic P with blue circuit nodes only
+alwaysApply: true
+---
+
+# Canonical logo (current)
+
+The only approved brand mark is the **metallic chrome “P” with left circuit traces and glowing blue nodes**. Display background must be **transparent** (no white square / white expanse backer on dark or colored UI).
+
+## Use everywhere
+
+- `/logo.png`, `/assets/logo.png`, `/brand/proyonetim-logo.png`
+- `/icon.svg` (must embed or equal this mark — **not** the orange building SVG)
+- Favicon / apple-touch-icon
+- Sidebar, hero chip, marketing header, login, PWA icons
+
+## Forbidden
+
+- Old **black-background** lockup with “PROYÖNETİM” wordmark + slogan as the UI icon
+- Orange **building-block** `icon.svg`
+- Stretched / `aspect-[4/3]` / wavy / sticky / filtered logo treatments
+- AI-regenerated “similar” P marks — use the approved PNG bytes
+- Aggressive white/background peel that punches holes in chrome highlights (P looks like “two pieces”)
+- Large **white square / white-field backer** behind the mark on dark UI (sidebar, dark header)
+- `mix-blend-mode: multiply` as a substitute for transparency on dark UI (crushes chrome to near-invisible)
+
+## Display
+
+- `object-contain`, square frame (`w-14 h-14` or equivalent ~56px sidebar; ~44px marketing), no dark overlay on the logo itself
+- Logo wrappers / chips: `background: transparent` — no white padded box
+- Do not crop circuit nodes off the left edge
+- **P must be ONE continuous solid piece** (top bar + curve + stem connected). Never ship a peel that eats chrome specular highlights and splits the letter into fragments
+- Prefer **transparent RGBA** PNG with paper field removed via edge/soft-plate peel **guarded by a metal keep-mask** (do not globally punch near-white)
+- Do **not** auto-peel near-white pixels from the chrome body
+- Store / OS icons that legally need an opaque tile may use a separate white-field asset; **UI logos must not show that white tile**

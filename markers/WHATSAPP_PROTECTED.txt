@@ -1,0 +1,17 @@
+WHATSAPP MESSAGING HARD LOCK
+Date: 2026-08-04
+Doc: docs/WHATSAPP-MESSAGING-HARD-LOCK-2026-08-04.md
+Rule: protect-whatsapp-messaging-hard-lock + protect-whatsapp-communication-hard-lock
+
+DO NOT modify WhatsApp Merkezi / /api/whatsapp/* / send-relay / Evolution
+without an explicit user command naming WhatsApp / İletişim / messaging.
+
+Working state at freeze:
+- whatsapp-send-relay :3016 online (post SEND-502)
+- Evolution connected / baileys_connected
+- Active lazy chunk: page-CKFOdH2C2-connectfix-e2e-20260804-195718.js
+- SHA256 e2e: 9ef761b719365b72e6003fa4328eb9ec3edd617155200a5b971d46a509a26d12
+- SHA256 page-CKFOdH2C2.js: e56d32df0f37b48a24d3c4fb99abe9520fe8c2844b6eee52562b59b405440f56
+- Landing: /opt/proyonetim/web/overview-compact-restored-20260802
+
+This file is a freeze marker only — not a code rewrite.

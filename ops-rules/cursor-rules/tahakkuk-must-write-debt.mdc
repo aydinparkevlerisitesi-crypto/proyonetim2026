@@ -1,0 +1,26 @@
+---
+description: Tahakkuk Et gerçek borç yazar; sadece toast yasak
+alwaysApply: true
+---
+
+# Tahakkuk Et = gerçek borç
+
+`Aidat & Borçlandırma` / `dues-management` içinde **Tahakkuk Et**:
+
+## Zorunlu
+
+1. `debit_records` insert (site_id, unit_id, amount, period, due_date, category Aidat, status pending)
+2. `units.malik_bakiye` veya `kiraci_bakiye` write-through (kiracı adı varsa kiracı)
+3. Dönem etiketi: `TEMMUZ AVANS TUTARI (AİDAT)` tarzı; mükerrer dönem engeli
+4. Başarı mesajı yalnızca yazım **başarılı olduktan sonra**
+5. Kişi kartı / finans kartı bu kayıtlardan beslenir
+
+## Yasak
+
+- Sadece `setShowSuccess(true)` / “Tahakkuk başarılı” toast (yazım yok)
+- Önizleme tablosunu gerçek borç sanmak
+- Tutarı birim sayısına bölmek (eşit = daire başı tutar)
+
+## Not
+
+STT: “takip / ta’a kipi / copyright” ≈ **tahakkuk**

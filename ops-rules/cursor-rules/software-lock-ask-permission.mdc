@@ -1,0 +1,47 @@
+---
+description: SOFTWARE LOCK — no Pro Yönetim feature/application code edits until user explicitly unlocks for that episode
+alwaysApply: true
+---
+
+# SOFTWARE LOCK (2026-08-05)
+
+Pro Yönetim **yazılımı kilitlidir**. Uygulama / özellik koduna dokunma.
+
+## Zorunlu
+
+- **Her yazılım işinden önce** kullanıcıdan açık izin iste
+- Kullanıcı bu oturum/epizot için kilidi açmadan veya ilgili alanı isimlendirerek “unlock / kilidi aç / şu özelliğe dokun” demeden:
+  - `src/`, canlı `landing/assets`, API route/feature kodu, PM2 feature process kaynakları, WhatsApp/overview/finans/personel vb. **değiştirilmez**
+- Bu kural, `protect-working-software` ve WhatsApp hard-lock kurallarının **üstüne** eklenir; onları gevşetmez
+
+## WhatsApp / mesajlaşma
+
+- WhatsApp Merkezi + send path zaten **HARD LOCK** (`protect-whatsapp-messaging-hard-lock`, `protect-whatsapp-communication-hard-lock`)
+- Kullanıcı açıkça WhatsApp / İletişim / messaging demeden **dokunma** — yazılım kilidi açık olsa bile
+
+## İzin sayılanlar (epizot)
+
+Kullanıcı örneğin şunu demeli:
+- “yazılım kilidini aç”
+- “şu özelliğe dokunabilirsin: …”
+- “unlock software for X”
+
+Belirsiz istekler (“düzelt”, “otonom”, “devam”, “iyileştir”) **izin değildir**.
+
+## Bu kural altında serbest (yazılım kodu değil)
+
+- Dokümantasyon / Cursor kuralları (kullanıcı istediğinde)
+- Yedek / full-server kit / scp-rsync / smoke **okuma**
+- Canlıyı bozmayan envanter (`pm2 list`, `ls`, `sha256sum`)
+- `radore-deployment-agent` **başlatma** yasak kalır
+
+## Yasak (kilit varken)
+
+- Feature/UI/API kaynak veya canlı chunk yaması
+- `landing` symlink deneyleri
+- Staging’de bile “sessizce” ürün kodu değiştirip canlıya yaklaşmak
+- “Küçük düzeltme” bahanesiyle kilit delme
+
+## Doküman
+
+- `docs/SOFTWARE-LOCK-2026-08-05.md`

@@ -1,0 +1,63 @@
+---
+description: Korunan ana sayfa — KpiGrid genel bakış (şehir hero, 4 kart, SSOT, kompakt)
+alwaysApply: true
+---
+
+# Korunan ana sayfa (`/dashboard/overview`)
+
+Yazılımın **ana sayfası** budur — geçici tema veya Readdy şablonu değildir.
+
+`protect-working-software` ve `software-shared-not-site-private` kuralları geçerlidir.
+
+## Onaylı canlı referans (2026-07-22)
+
+- Release: `overview-compact-20260722-092420`
+- Zincir: `kpigrid-ssot-real-*` → `overview-fincards-restore-*` → `overview-compact-*`
+- Yedek: `/var/backups/proyonetim/feature-protection/PROTECTED-overview-compact-*`
+
+## Kilitli dosyalar (açık onay olmadan değiştirme)
+
+| Dosya | Rol |
+|-------|-----|
+| `src/pages/dashboard/overview/page.tsx` | `CityHeroBanner` + `KpiGrid` router (**ReaddyMainOverview değil**) |
+| `src/pages/dashboard/overview/components/KpiGrid.tsx` | 4 büyük FinCard + Detaylı Hareket + operasyonel bölümler |
+| `src/pages/dashboard/components/DashboardLayout.tsx` | Overview’da tek `SiteSwitcher` üst şerit |
+
+## Kilitli görsel yapı
+
+- **Hero:** `dashboard-city-hero-v1`, net fotoğraf, overlay yok
+- **Yükseklik:** `h-[80px] md:h-[96px]` (kompakt; kartlar sayfayı domine eder)
+- **Site adı:** beyaz chip; hero içinde ikinci site seçici yok
+- **İçerik:** `max-w-[1480px] mx-auto`, sıkı padding (`px-3 py-3` …)
+- **Üst 4 kart:** Bankalar Toplamı, POS, Nakit Kasa, Toplam Borçlandırma — büyük renkli `FinCard`
+- **Alt bölüm:** “Detaylı Hareket Özeti” (6 renkli `MiniCard`) + operasyonel + hızlı işlemler
+- Kartlar `NavLink` ile gerçek route’lara bağlı kalır
+
+## Kilitli veri (sahte / demo yok)
+
+- Finans: `useFinancialSnapshot` (SSOT) — boş site = **₺0**, mock rakam yasak
+- `Garanti BBVA`, sabit sparkline, sahte trend/hedef yüzdesi **yasak**
+- Uyarı bandı (alerts) ana sayfada **yok**
+- `LiveOperationsCenter` (sahte “hepsi online”) ana sayfada **yok**
+
+## Yasak (açık onay olmadan)
+
+- `ReaddyMainOverview` ile `page.tsx` router’ını geri değiştirmek
+- `site-mgmt-hero.jpg` / köprü hero / koyu gradient overlay
+- Hero’yu ~200px banner’a çıkarmak veya site seçiciyi hero’ya ikinci kez koymak
+- Banka/TEB/site-switcher yamalarında overview’u yan etkiyle ezmek
+- Tüm release’i eski kopyayla `rsync` — onaylı overview’u geri alırsa
+
+## Yeni iş nerede yapılır (“farklı seviye”)
+
+- Yalnızca staging: `/var/www/proyonetim-staging/work/<özellik>-YYYYMMDD-...`
+- Canlı `landing` yalnızca kullanıcı **“publish” / “canlıya al”** deyince
+- Overview’a dokunacak yama **cerrahi**; `page.tsx` / `KpiGrid.tsx` wholesale swap yasak
+
+## Yanlışlıkla bozulursa
+
+```bash
+REL=/var/www/proyonetim/releases/overview-compact-20260722-092420
+ln -sfn "$REL" /var/www/proyonetim/landing
+# veya en son PROTECTED-overview-compact-* yedeğinden KpiGrid + page.tsx geri yükle
+```

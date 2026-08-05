@@ -1,0 +1,19 @@
+---
+description: Single-block sites — daire listesi blok öneki olmadan, daire numarasına göre sıralanır
+alwaysApply: true
+---
+
+# Tek blokta daire sırası
+
+AK-RE gibi **tek bloklu** sitelerde daire listesi **blok-daire** birleşimi (`1-10`) kullanmaz.
+
+## Zorunlu
+
+- Blok sayısı `<= 1` ise görünen daire no = yalnızca `daire_no` (`10`, `1`, `2` …)
+- Sıralama **daire numarasına** göredir (1…9…10…11), blok adına veya `1-10` string sıralamasına değil
+- Birden fazla blok varsa `A-10` / `B-3` gibi blok öneki kullanılabilir
+
+## Yasak
+
+- Tek blokta `1-10` üretip localeCompare ile 10’u 1’den hemen sonra göstermek
+- Blok adını (ör. `"1"`) daire numarasının önüne yapıştırmak

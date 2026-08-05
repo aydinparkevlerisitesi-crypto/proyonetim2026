@@ -1,0 +1,25 @@
+---
+description: Tahakkuk sonrası borç kişi kartı ve finans kartlarında görünür olmalı
+alwaysApply: true
+---
+
+# Tahakkuk kartlara yansır
+
+Tahakkuk (aidat/borçlandırma) yapıldığında sonuç **görünür** olmalıdır:
+
+## Zorunlu
+
+- **Kişi kartı** (sakin/malik ekstresi): `debit_records` satırları + `units.malik_bakiye` / `kiraci_bakiye` güncel
+- **Finans kartları** (overview FinCard): `Toplam Borçlandırma` = SSOT `totalAccrual` (debit toplamı); borç = birim bakiyeleri toplamı
+- Tahakkuk yazımı `debit_records` insert + birim bakiye write-through (aynı işlemde)
+- `bank_accounts` filtresi doğru kolon: `is_active` (yanlış `aktif` ile banka/finans kartı 0 kalmaz)
+
+## Yasak
+
+- Tahakkuk başarılı deyip kartları güncellemeden bırakmak
+- Overview / kişi kartında tahakkuku gizleyen sahte 0 SSOT
+
+## Not
+
+- STT “copyright” ≈ tahakkuk (önceki kullanım)
+- Tahakkuk **dues-management** akışından yapılır; kartlar **sonucu gösterir**, ayrı tahakkuk formu olmak zorunda değil
