@@ -1,0 +1,323 @@
+name: Staging migration
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: staging-migration
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  STAGING_PROJECT_REF: qfpwcbsqmbggvycbdzvk
+  PRODUCTION_PROJECT_REF: wwzjpsqhpvvnqofqpwur
+  STAGING_SUPABASE_URL: https://qfpwcbsqmbggvycbdzvk.supabase.co
+  PGSSLMODE: require
+
+jobs:
+  preflight:
+    name: Dry-run / preflight
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate DSN shape and reject production
+        shell: bash
+        run: |
+          set +x
+          set +o xtrace
+          set -eu
+          python3 - <<'PY'
+          import os
+          import sys
+          from urllib.parse import unquote, urlparse
+
+          PROD = "wwzjpsqhpvvnqofqpwur"
+          STAGING = "qfpwcbsqmbggvycbdzvk"
+          EXPECTED_USER = f"postgres.{STAGING}"
+          FORBIDDEN = (
+              "YOUR-PASSWORD",
+              "SESSION_POOLER_URI",
+              "PANODAKI",
+              f"db.{STAGING}.supabase.co",
+              PROD,
+          )
+
+          for key, value in os.environ.items():
+              blob = f"{key}={value or ''}"
+              if PROD in blob:
+                  print(f"FAIL production ref present in env name={key}")
+                  sys.exit(1)
+
+          url = (os.environ.get("SUPABASE_DB_URL") or "").strip()
+          if not url:
+              print("FAIL SUPABASE_DB_URL missing")
+              sys.exit(1)
+
+          print(f"::add-mask::{url}")
+          for token in FORBIDDEN:
+              if token.lower() in url.lower():
+                  print(f"FAIL forbidden token in DSN: {token}")
+                  sys.exit(1)
+
+          parsed = urlparse(url.replace("postgres://", "postgresql://", 1))
+          host = parsed.hostname or ""
+          port = parsed.port or 0
+          user = unquote(parsed.username or "")
+          password = unquote(parsed.password or "")
+          if password:
+              print(f"::add-mask::{password}")
+
+          if host.endswith(".supabase.co") and host.startswith("db."):
+              print("FAIL Direct db.*.supabase.co host")
+              sys.exit(1)
+          if not host.endswith(".pooler.supabase.com"):
+              print(f"FAIL host is not Session Pooler ({host})")
+              sys.exit(1)
+          if user != EXPECTED_USER:
+              print("FAIL DB user is not postgres.<staging-ref>")
+              sys.exit(1)
+          if port != 5432:
+              print(f"FAIL port is not 5432 (got {port})")
+              sys.exit(1)
+          print(f"PASS host={host} port={port} user=postgres.{STAGING} sslmode=require")
+          PY
+
+      - name: Static SQL secret scan
+        shell: bash
+        run: |
+          set +x
+          set -eu
+          python3 - <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          PROD = "wwzjpsqhpvvnqofqpwur"
+          files = [
+              "supabase/staging/00_schema_bootstrap.sql",
+              "supabase/migrations/20260825_multitenant_rls.sql",
+              "supabase/seed/staging_rls_seed.sql",
+          ]
+          secret_re = re.compile(
+              r"SUPABASE_DB_URL|postgres(?:ql)?://|sb_secret_|BEGIN RSA|PRIVATE KEY|eyJ[A-Za-z0-9_-]{20,}",
+              re.I,
+          )
+          email_re = re.compile(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}")
+          for rel in files:
+              text = pathlib.Path(rel).read_text(encoding="utf-8")
+              if PROD in text:
+                  print(f"FAIL production ref in {rel}")
+                  sys.exit(1)
+              if secret_re.search(text):
+                  print(f"FAIL secret-like token in {rel}")
+                  sys.exit(1)
+              if rel.endswith("staging_rls_seed.sql"):
+                  emails = email_re.findall(text)
+                  bad = [e for e in emails if not e.endswith("@test.local")]
+                  if bad:
+                      print(f"FAIL seed has {len(bad)} non-@test.local email(s)")
+                      sys.exit(1)
+                  print(f"PASS seed emails all @test.local count={len(emails)}")
+              print(f"PASS static scan {rel}")
+          PY
+
+      - name: Install psql
+        run: |
+          set +x
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql-client
+
+      - name: Connection test
+        shell: bash
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set +x
+          set +o xtrace
+          set -eu
+          export PGSSLMODE=require
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select current_database() as db, current_user as usr;"
+
+  apply:
+    name: Apply staging SQL
+    needs: preflight
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      PGSSLMODE: require
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Re-validate DSN before apply
+        shell: bash
+        run: |
+          set +x
+          set +o xtrace
+          set -eu
+          python3 - <<'PY'
+          import os
+          import sys
+          from urllib.parse import unquote, urlparse
+
+          PROD = "wwzjpsqhpvvnqofqpwur"
+          STAGING = "qfpwcbsqmbggvycbdzvk"
+          for key, value in os.environ.items():
+              if PROD in f"{key}={value or ''}":
+                  print(f"FAIL production ref in env name={key}")
+                  sys.exit(1)
+          url = (os.environ.get("SUPABASE_DB_URL") or "").strip()
+          if not url:
+              print("FAIL SUPABASE_DB_URL missing")
+              sys.exit(1)
+          print(f"::add-mask::{url}")
+          parsed = urlparse(url.replace("postgres://", "postgresql://", 1))
+          host = parsed.hostname or ""
+          user = unquote(parsed.username or "")
+          password = unquote(parsed.password or "")
+          if password:
+              print(f"::add-mask::{password}")
+          if PROD in url or "YOUR-PASSWORD" in url or host.startswith("db."):
+              print("FAIL DSN rejected")
+              sys.exit(1)
+          if not host.endswith(".pooler.supabase.com") or user != f"postgres.{STAGING}" or (parsed.port or 0) != 5432:
+              print("FAIL DSN shape")
+              sys.exit(1)
+          print("PASS apply-gate DSN shape")
+          PY
+
+      - name: Install psql
+        run: |
+          set +x
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql-client
+
+      - name: Apply 1 schema bootstrap
+        shell: bash
+        run: |
+          set +x
+          set +o xtrace
+          set -eu
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -1 -f supabase/staging/00_schema_bootstrap.sql
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select tablename from pg_tables where schemaname='public' order by 1;"
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select to_regclass('public.sites') as sites, to_regclass('public.units') as units, to_regclass('public.profiles') as profiles;"
+
+      - name: Apply 2 multitenant RLS
+        shell: bash
+        run: |
+          set +x
+          set +o xtrace
+          set -eu
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -1 -f supabase/migrations/20260825_multitenant_rls.sql
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select count(*) as mt_policy_count from pg_policies where schemaname='public' and policyname like 'mt_%';"
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select tablename, policyname from pg_policies where schemaname='public' and tablename in ('sites','units','blocks','site_users') and policyname like 'mt_%' order by 1,2;"
+
+      - name: Apply 3 synthetic seed
+        shell: bash
+        run: |
+          set +x
+          set +o xtrace
+          set -eu
+          python3 - <<'PY'
+          import pathlib
+          import re
+          import sys
+          text = pathlib.Path("supabase/seed/staging_rls_seed.sql").read_text(encoding="utf-8")
+          emails = re.findall(r"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}", text)
+          bad = [e for e in emails if not e.endswith("@test.local")]
+          if bad:
+              print(f"FAIL seed non-synthetic emails count={len(bad)}")
+              sys.exit(1)
+          print(f"PASS seed file emails @test.local count={len(emails)}")
+          PY
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -1 -f supabase/seed/staging_rls_seed.sql
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select count(*) as site_count from public.sites;"
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select name from public.sites order by name;"
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select count(*) as bad_profile_emails from public.profiles where email not like '%@test.local';"
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select count(*) as bad_profile_names from public.profiles where name not like 'Test %';"
+
+      - name: Post-apply schema, RLS, seed counts
+        shell: bash
+        run: |
+          set +x
+          set +o xtrace
+          set -eu
+          psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          DECLARE
+            sites_n int;
+            units_n int;
+            mt_n int;
+            bad_email int;
+            bad_name int;
+          BEGIN
+            SELECT count(*) INTO sites_n FROM public.sites;
+            SELECT count(*) INTO units_n FROM public.units;
+            SELECT count(*) INTO mt_n FROM pg_policies WHERE schemaname='public' AND policyname LIKE 'mt_%';
+            SELECT count(*) INTO bad_email FROM public.profiles WHERE email NOT LIKE '%@test.local';
+            SELECT count(*) INTO bad_name FROM public.profiles WHERE name NOT LIKE 'Test %';
+            IF to_regclass('public.sites') IS NULL THEN
+              RAISE EXCEPTION 'sites table missing';
+            END IF;
+            IF sites_n < 2 THEN
+              RAISE EXCEPTION 'expected synthetic sites, got %', sites_n;
+            END IF;
+            IF units_n < 1 THEN
+              RAISE EXCEPTION 'expected synthetic units, got %', units_n;
+            END IF;
+            IF mt_n < 1 THEN
+              RAISE EXCEPTION 'expected mt_%% policies, got %', mt_n;
+            END IF;
+            IF bad_email <> 0 THEN
+              RAISE EXCEPTION 'non-synthetic profile emails: %', bad_email;
+            END IF;
+            IF bad_name <> 0 THEN
+              RAISE EXCEPTION 'non-Test profile names: %', bad_name;
+            END IF;
+            RAISE NOTICE 'PASS post-apply sites=% units=% mt_policies=%', sites_n, units_n, mt_n;
+          END $$;
+          SQL
+
+  smoke:
+    name: Staging SPA / host smoke
+    needs: apply
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Reject production host
+        shell: bash
+        run: |
+          set +x
+          set -eu
+          if [[ "${STAGING_SUPABASE_URL}" == *"${PRODUCTION_PROJECT_REF}"* ]]; then
+            echo "FAIL production ref in staging URL"
+            exit 1
+          fi
+          if [[ "${STAGING_SUPABASE_URL}" != "https://${STAGING_PROJECT_REF}.supabase.co" ]]; then
+            echo "FAIL unexpected staging URL host"
+            exit 1
+          fi
+          echo "PASS smoke target host=${STAGING_PROJECT_REF}.supabase.co"
+
+      - name: Public staging host smoke (no PII)
+        shell: bash
+        run: |
+          set +x
+          set -eu
+          code="$(curl -sS -o /tmp/staging-smoke.body -w '%{http_code}' \
+            --max-redirs 0 \
+            "${STAGING_SUPABASE_URL}/auth/v1/settings" || true)"
+          if grep -F "${PRODUCTION_PROJECT_REF}" /tmp/staging-smoke.body >/dev/null 2>&1; then
+            echo "FAIL production ref in smoke body"
+            exit 1
+          fi
+          echo "PASS staging auth settings HTTP ${code} (no production ref; no PII sent)"
+          rm -f /tmp/staging-smoke.body
